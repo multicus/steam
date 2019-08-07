@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -87,7 +86,7 @@ type MarketItemSearchResponse struct {
 type MarketSearchItem struct {
 	Name        string      `json:"name"`
 	HashName    string      `json:"hash_name"`
-	MarketCount string      `json:"sell_listings"`
+	MarketCount uint32      `json:"sell_listings"`
 	SellPrice   int         `json:"sell_price"`
 	SellPrice2  string      `json:"sell_price_text"` // The one user sees on search result list
 	AppIcon     string      `json:"app_icon"`
@@ -224,10 +223,6 @@ func (session *Session) GetMarketItemSearch(appID uint64, searchQuery string, of
 		return nil, ErrCannotLoadPrices
 	}
 
-	log.Println(response.TotalCount)
-	/////////////////////////////////////////
-	log.Println("Starting getting results")
-
 	var results []interface{}
 	var ok bool
 	if results, ok = response.Results.([]interface{}); !ok {
@@ -237,34 +232,23 @@ func (session *Session) GetMarketItemSearch(appID uint64, searchQuery string, of
 	items := []*MarketSearchItem{}
 	for _, v := range results {
 		if v, ok := v.(map[string]interface{}); ok {
-			log.Println("valid2")
+			item := &MarketSearchItem{}
 
-			//item := &MarketSearchItem{}
+			item.Name = v["name"].(string)
+			item.HashName = v["hash_name"].(string)
+			item.MarketCount = v["sell_listings"].(uint32)
+			item.SellPrice = v["sell_price"].(int)
+			item.SellPrice2 = v["sell_price_text"].(string)
+			item.AppIcon = v["app_icon"].(string)
+			item.AppName = v["app_name"].(string)
+			item.AssetDesc = v["asset_description"]
+			item.SalePrice = v["SalePrice"].(string)
 
-			for _, val := range v {
-				log.Println(val)
-			}
+			items = append(items, item)
 		}
 	}
 
-	log.Println("Finished getting results")
-
 	return items, nil
-
-	/*
-		for _, v := range results {
-			if v, ok := v.([]interface{}); ok {
-				item := &MarketSearchItem{}
-				for _, val := range v {
-					switch val := val.(type) {
-					case string:
-						if len(item.)
-					}
-				}
-			}
-		}
-	*/
-
 }
 
 func (session *Session) SellItem(item *InventoryItem, amount, price uint64) (*MarketSellResponse, error) {
