@@ -236,7 +236,9 @@ func (session *Session) GetMarketItemSearch(appID uint64, searchQuery string, of
 
 	items := []*MarketSearchItem{}
 	for _, v := range results {
+		log.Println("valid1")
 		if v, ok := v.([]interface{}); ok {
+			log.Println("valid2")
 			//item := &MarketSearchItem{}
 
 			for _, val := range v {
