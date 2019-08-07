@@ -87,7 +87,7 @@ type MarketSearchItem struct {
 	Name        string      `json:"name"`
 	HashName    string      `json:"hash_name"`
 	MarketCount float64     `json:"sell_listings"`
-	SellPrice   int         `json:"sell_price"`
+	SellPrice   float64     `json:"sell_price"`
 	SellPrice2  string      `json:"sell_price_text"` // The one user sees on search result list
 	AppIcon     string      `json:"app_icon"`
 	AppName     string      `json:"app_name"`
@@ -237,7 +237,7 @@ func (session *Session) GetMarketItemSearch(appID uint64, searchQuery string, of
 			item.Name = v["name"].(string)
 			item.HashName = v["hash_name"].(string)
 			item.MarketCount = v["sell_listings"].(float64)
-			item.SellPrice = v["sell_price"].(int)
+			item.SellPrice = v["sell_price"].(float64)
 			item.SellPrice2 = v["sell_price_text"].(string)
 			item.AppIcon = v["app_icon"].(string)
 			item.AppName = v["app_name"].(string)
