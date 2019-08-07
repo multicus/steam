@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -225,26 +226,22 @@ func (session *Session) GetMarketItemSearch(appID uint64, searchQuery string, of
 
 	/////////////////////////////////////////
 
-	var results []MarketSearchItem
+	var results []interface{}
 	var ok bool
-	if results, ok = response.Results.([]MarketSearchItem); !ok {
+	if results, ok = response.Results.([]interface{}); !ok {
 		return nil, ErrCannotLoadPrices
 	}
 
-	/*
-		items := []*MarketSearchItem{}
-		for _, v := range results {
-			if v, ok := v.([]interface{}); ok {
-				item := &MarketSearchItem{}
+	items := []*MarketSearchItem{}
+	for _, v := range results {
+		if v, ok := v.([]interface{}); ok {
+			item := &MarketSearchItem{}
 
-				item.AppIcon = v["lul"].(string)
-
-				for _, val := range v {
-					item
-				}
+			for _, val := range v {
+				log.Println(v)
 			}
 		}
-	*/
+	}
 
 	return results, nil
 
