@@ -220,13 +220,13 @@ func (session *Session) GetMarketItemSearch(appID uint64, searchQuery string, of
 		return nil, err
 	}
 
-	log.Println("lul ok")
-
 	if !response.Success {
 		return nil, ErrCannotLoadPrices
 	}
 
+	log.Println(response.TotalCount)
 	/////////////////////////////////////////
+	log.Println("Starting getting results")
 
 	var results []interface{}
 	var ok bool
@@ -244,6 +244,8 @@ func (session *Session) GetMarketItemSearch(appID uint64, searchQuery string, of
 			}
 		}
 	}
+
+	log.Println("Finished getting results")
 
 	return items, nil
 
