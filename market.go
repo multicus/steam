@@ -242,7 +242,7 @@ func (session *Session) GetMarketItemSearch(appID uint64, searchQuery string, of
 			item.AppIcon = v["app_icon"].(string)
 			item.AppName = v["app_name"].(string)
 			item.AssetDesc = v["asset_description"]
-			item.SalePrice = v["SalePrice"].(string)
+			item.SalePrice = v["sale_price_text"].(string)
 
 			items = append(items, item)
 		}
