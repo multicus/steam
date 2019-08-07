@@ -197,7 +197,7 @@ func (session *Session) GetMarketItemPriceOverview(appID uint64, country, curren
 }
 
 func (session *Session) GetMarketItemSearch(appID uint64, searchQuery string, offset int, count int) ([]*MarketSearchItem, error) {
-	resp, err := session.client.Get("https://steamcommunity.com/market/search/render/?" + url.Values{
+	resp, err := session.client.Get("https://steamcommunity.com/market/search/render/?norender=1&" + url.Values{
 		"appid":  {strconv.FormatUint(appID, 10)},
 		"query":  {searchQuery},
 		"offset": {strconv.Itoa(offset)},
@@ -219,6 +219,8 @@ func (session *Session) GetMarketItemSearch(appID uint64, searchQuery string, of
 	if err = json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		return nil, err
 	}
+
+	log.Println("lul ok")
 
 	if !response.Success {
 		return nil, ErrCannotLoadPrices

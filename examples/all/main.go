@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/doctype/steam"
+	"github.com/multicus/steam"
 )
 
 func main() {
