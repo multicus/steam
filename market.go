@@ -74,6 +74,27 @@ type MarketItemResponse struct {
 	Prices      interface{} `json:"prices"`
 }
 
+type MarketItemSearchResponse struct {
+	Success    bool               `json:"success"`
+	Start      int                `json:"start"`
+	PageSize   int                `json:"pagesize"`
+	TotalCount int                `json:"total_count"`
+	SearchData interface{}        `json:"searchdata"`
+	Results    []MarketSearchItem `json:"results"`
+}
+
+type MarketSearchItem struct {
+	Name        string      `json:"name"`
+	HashName    string      `json:"hash_name"`
+	MarketCount string      `json:"sell_listings"`
+	SellPrice   int         `json:"sell_price"`
+	SellPrice2  string      `json:"sell_price_text"` // The one user sees on search result list
+	AppIcon     string      `json:"app_icon"`
+	AppName     string      `json:"app_name"`
+	AssetDesc   interface{} `json:"asset_description"`
+	SalePrice   string      `json:"sale_price_text"` // The cheapest one available
+}
+
 type MarketSellResponse struct {
 	Success                    bool   `json:"success"`
 	RequiresConfirmation       uint32 `json:"requires_confirmation"`
@@ -174,6 +195,66 @@ func (session *Session) GetMarketItemPriceOverview(appID uint64, country, curren
 	return overview, nil
 }
 
+func (session *Session) GetMarketItemSearch(appID uint64, searchQuery string, offset int, count int) ([]MarketSearchItem, error) {
+	resp, err := session.client.Get("https://steamcommunity.com/market/search/render/?" + url.Values{
+		"appid":  {strconv.FormatUint(appID, 10)},
+		"query":  {searchQuery},
+		"offset": {strconv.Itoa(offset)},
+		"count":  {strconv.Itoa(count)},
+	}.Encode())
+	if resp != nil {
+		defer resp.Body.Close()
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("http error: %d", resp.StatusCode)
+	}
+
+	response := MarketItemSearchResponse{}
+	if err = json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return nil, err
+	}
+
+	if !response.Success {
+		return nil, ErrCannotLoadPrices
+	}
+
+	/*
+		var results []interface{}
+		var ok bool
+		if results, ok = response.Results.([]interface{}); !ok {
+			return nil, ErrCannotLoadPrices
+		}
+
+		items := []*MarketSearchItem{}
+
+		if err = json.NewDecoder(response.Results).Decode(&items); err != nil {
+			return nil, err
+		}
+	*/
+
+	return response.Results, nil
+
+	/*
+		for _, v := range results {
+			if v, ok := v.([]interface{}); ok {
+				item := &MarketSearchItem{}
+				for _, val := range v {
+					switch val := val.(type) {
+					case string:
+						if len(item.)
+					}
+				}
+			}
+		}
+	*/
+
+}
+
 func (session *Session) SellItem(item *InventoryItem, amount, price uint64) (*MarketSellResponse, error) {
 	resp, err := session.client.PostForm("https://steamcommunity.com/market/sellitem/", url.Values{
 		"amount":    {strconv.FormatUint(amount, 10)},
@@ -226,7 +307,7 @@ func (session *Session) PlaceBuyOrder(appid uint64, priceTotal float64, quantity
 
 	req.Header.Add(
 		"Referer",
-		fmt.Sprintf("https://steamcommunity.com/market/listings/%d/%s", appid, referer ),
+		fmt.Sprintf("https://steamcommunity.com/market/listings/%d/%s", appid, referer),
 	)
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
