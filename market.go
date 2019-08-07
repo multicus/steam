@@ -75,12 +75,12 @@ type MarketItemResponse struct {
 }
 
 type MarketItemSearchResponse struct {
-	Success    bool               `json:"success"`
-	Start      int                `json:"start"`
-	PageSize   int                `json:"pagesize"`
-	TotalCount int                `json:"total_count"`
-	SearchData interface{}        `json:"searchdata"`
-	Results    []MarketSearchItem `json:"results"`
+	Success    bool        `json:"success"`
+	Start      int         `json:"start"`
+	PageSize   int         `json:"pagesize"`
+	TotalCount int         `json:"total_count"`
+	SearchData interface{} `json:"searchdata"`
+	Results    interface{} `json:"results"`
 }
 
 type MarketSearchItem struct {
@@ -223,21 +223,30 @@ func (session *Session) GetMarketItemSearch(appID uint64, searchQuery string, of
 		return nil, ErrCannotLoadPrices
 	}
 
+	/////////////////////////////////////////
+
+	var results []MarketSearchItem
+	var ok bool
+	if results, ok = response.Results.([]MarketSearchItem); !ok {
+		return nil, ErrCannotLoadPrices
+	}
+
 	/*
-		var results []interface{}
-		var ok bool
-		if results, ok = response.Results.([]interface{}); !ok {
-			return nil, ErrCannotLoadPrices
-		}
-
 		items := []*MarketSearchItem{}
+		for _, v := range results {
+			if v, ok := v.([]interface{}); ok {
+				item := &MarketSearchItem{}
 
-		if err = json.NewDecoder(response.Results).Decode(&items); err != nil {
-			return nil, err
+				item.AppIcon = v["lul"].(string)
+
+				for _, val := range v {
+					item
+				}
+			}
 		}
 	*/
 
-	return response.Results, nil
+	return results, nil
 
 	/*
 		for _, v := range results {
