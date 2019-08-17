@@ -84,15 +84,15 @@ type MarketItemSearchResponse struct {
 }
 
 type MarketSearchItem struct {
-	Name        string      `json:"name"`
-	HashName    string      `json:"hash_name"`
-	MarketCount float64     `json:"sell_listings"`
-	SellPrice   float64     `json:"sell_price"`
-	SellPrice2  string      `json:"sell_price_text"` // The one user sees on search result list
-	AppIcon     string      `json:"app_icon"`
-	AppName     string      `json:"app_name"`
-	AssetDesc   interface{} `json:"asset_description"`
-	SalePrice   string      `json:"sale_price_text"` // The cheapest one available
+	Name         string      `json:"name"`
+	HashName     string      `json:"hash_name"`
+	SellListings float64     `json:"sell_listings"`
+	SellPrice    float64     `json:"sell_price"`
+	SellPrice2   string      `json:"sell_price_text"` // The one user sees on search result list
+	AppIcon      string      `json:"app_icon"`
+	AppName      string      `json:"app_name"`
+	AssetDesc    interface{} `json:"asset_description"`
+	SalePrice    string      `json:"sale_price_text"` // The cheapest one available
 }
 
 type MarketSellResponse struct {
@@ -195,7 +195,7 @@ func (session *Session) GetMarketItemPriceOverview(appID uint64, country, curren
 	return overview, nil
 }
 
-func (session *Session) GetMarketItemSearch(appID uint64, searchQuery string, offset int, count int) ([]*MarketSearchItem, error) {
+func (session *Session) GetMarketItemSearch(appID uint64, searchQuery string, offset int, count int) (*MarketItemSearchResponse, []*MarketSearchItem, error) {
 	resp, err := session.client.Get("https://steamcommunity.com/market/search/render/?norender=1&" + url.Values{
 		"appid":  {strconv.FormatUint(appID, 10)},
 		"query":  {searchQuery},
@@ -207,26 +207,26 @@ func (session *Session) GetMarketItemSearch(appID uint64, searchQuery string, of
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("http error: %d", resp.StatusCode)
+		return nil, nil, fmt.Errorf("http error: %d", resp.StatusCode)
 	}
 
-	response := MarketItemSearchResponse{}
+	response := &MarketItemSearchResponse{}
 	if err = json.NewDecoder(resp.Body).Decode(&response); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if !response.Success {
-		return nil, ErrCannotLoadPrices
+		return nil, nil, ErrCannotLoadPrices
 	}
 
 	var results []interface{}
 	var ok bool
 	if results, ok = response.Results.([]interface{}); !ok {
-		return nil, ErrCannotLoadPrices
+		return nil, nil, ErrCannotLoadPrices
 	}
 
 	items := []*MarketSearchItem{}
@@ -236,7 +236,7 @@ func (session *Session) GetMarketItemSearch(appID uint64, searchQuery string, of
 
 			item.Name = v["name"].(string)
 			item.HashName = v["hash_name"].(string)
-			item.MarketCount = v["sell_listings"].(float64)
+			item.SellListings = v["sell_listings"].(float64)
 			item.SellPrice = v["sell_price"].(float64)
 			item.SellPrice2 = v["sell_price_text"].(string)
 			item.AppIcon = v["app_icon"].(string)
@@ -248,7 +248,7 @@ func (session *Session) GetMarketItemSearch(appID uint64, searchQuery string, of
 		}
 	}
 
-	return items, nil
+	return response, items, nil
 }
 
 func (session *Session) SellItem(item *InventoryItem, amount, price uint64) (*MarketSellResponse, error) {
